@@ -72,7 +72,7 @@ docker images
 
 ```
 > [docker imagesのレスポンス]  
- ![docker imagesのレスポンス](/images/image.png)
+<img src="images/image.png" width="400">
 
 ### 手順③：コンテナの起動
 
@@ -109,7 +109,7 @@ Windows側のWebブラウザ（Chrome, Edgeなど）を起動し、以下のURL�
 以下のように「東京の天気」が表示されれば、構築成功です。
 
 > [サイトビュー]  
-![サイトビュー](images/sitview.png)
+<img src="images/siteview.png" width="400">
 
 ---
 

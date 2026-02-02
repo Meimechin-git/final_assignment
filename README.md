@@ -37,7 +37,7 @@ weather-app/
 （GitHubからクローンした場合）
 
 ```bash
-git clone <リポジトリURL>
+git clone https://github.com/Meimechin-git/final_assignment
 cd weather-app
 
 ```

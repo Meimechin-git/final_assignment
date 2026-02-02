@@ -7,30 +7,45 @@ app = Flask(__name__)
 
 @app.route('/')
 def get_weather():
-    # スクレイピング対象：Yahoo!天気（東京）
-    url = "https://weather.yahoo.co.jp/weather/jp/13/4410.html"
+    # 大阪（大阪市）のURL
+    url = "https://weather.yahoo.co.jp/weather/jp/27/6200.html"
     
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/120.0.0.0 Safari/537.36"
+    }
+
     try:
-        # タイムアウトを設定して接続
-        response = requests.get(url, timeout=10)
+        response = requests.get(url, headers=headers, timeout=10)
         response.raise_for_status()
 
         soup = BeautifulSoup(response.content, "html.parser")
         
-        # タイトルとメインの天気予報ブロックを取得
+        # サイトのタイトル
         title = soup.title.text
+        
         forecast_box = soup.find(class_="forecastCity")
         
-        if forecast_box:
-            # 構造変更に対応できるよう安全に取得
-            weather_node = forecast_box.find(class_="weather")
-            weather_text = weather_node.p.img['alt'] if weather_node else "取得失敗"
-            icon_url = weather_node.p.img['src'] if weather_node else ""
-        else:
-            weather_text = "情報が見つかりません"
-            icon_url = ""
+        weather_text = "取得失敗"
+        icon_url = ""
 
-        # 現在時刻（コンテナ内時刻）
+        if forecast_box:
+            pict_element = forecast_box.find(class_="pict")
+            
+            if pict_element and pict_element.find("img"):
+                img_tag = pict_element.find("img")
+                weather_text = img_tag.get("alt", "不明")
+                icon_url = img_tag.get("src", "")
+            else:
+                first_img = forecast_box.find("img")
+                if first_img:
+                    weather_text = first_img.get("alt", "不明")
+                    icon_url = first_img.get("src", "")
+        
+        # --------------------
+
+        if weather_text == "取得失敗":
+            weather_text = "要素が見つかりませんでした。<br>HTML構造が変わっている可能性があります。"
+
         now = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
         return f"""
@@ -39,25 +54,24 @@ def get_weather():
         <head>
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
-            <title>Docker Weather App</title>
+            <title>Osaka Weather App</title>
             <style>
-                body {{ font-family: sans-serif; text-align: center; padding: 50px; background-color: #f0f2f5; }}
-                .card {{ background: white; padding: 20px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); display: inline-block; }}
+                body {{ font-family: sans-serif; text-align: center; padding: 50px; background-color: #f4f4f9; }}
+                .card {{ background: white; padding: 40px; border-radius: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); display: inline-block; }}
                 h1 {{ color: #333; }}
-                .weather-text {{ font-size: 24px; font-weight: bold; color: #007bff; }}
+                .weather-val {{ font-size: 30px; font-weight: bold; color: #e67e22; margin: 20px 0; }}
             </style>
         </head>
         <body>
             <div class="card">
-                <h1>東京の天気</h1>
-                <p>取得元: {title}</p>
-                <div>
-                    <img src="{icon_url}" alt="{weather_text}">
-                    <p class="weather-text">{weather_text}</p>
+                <h1>大阪の天気</h1>
+                <p>ページタイトル: {title}</p>
+                <div class="weather-val">
+                    {f'<img src="{icon_url}" width="120"><br>' if icon_url else ''}
+                    {weather_text}
                 </div>
                 <hr>
-                <p><small>Access Time: {now}</small></p>
-                <p><small>Powered by Flask & Docker</small></p>
+                <p><small>{now}</small></p>
             </div>
         </body>
         </html>
